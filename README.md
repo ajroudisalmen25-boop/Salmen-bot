@@ -1,2 +1,17 @@
-# Salmen-bot
-https://github.com/vlonevli/simple-telegram-bot.git
+# Salmen-bot 👹
+
+بوت تيليجرام يرسم "لوقو ملعون" بستايل رعب
+
+## 🚀 جرب البوت
+https://t.me/isalmen_bot
+
+## ✨ شنوة يعمل
+- تبعث أي كلمة للبوت
+- يرجعلك صورة لوقو بستايل مخيف ودموي 👁️
+- فيه 20 رسالة مجانية، بعدها "يرقد" ويقول `سامحني المودل راقد توا 😂`
+- بعد 10 ثواني "يشحن" ويقول `تم شحن ✅ ارسل الآن`
+
+## 🛠️ كيفاش تشغلو عندك
+```bash
+pip install -r requirements.txt
+python bot.py
