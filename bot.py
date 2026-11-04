@@ -1,9 +1,8 @@
 import telebot
 import os
 from PIL import Image, ImageDraw, ImageFont
-import textwrap
 
-TOKEN = 8928666107:AAFdWctjlr-foi-iuLJnsw0HI0n40jH1qDg
+TOKEN = os.environ.get('TELEGRAM_TOKEN')  # ✅ الصحيح
 bot = telebot.TeleBot(TOKEN)
 
 @bot.message_handler(commands=['start'])
@@ -21,9 +20,7 @@ def make_logo(message):
     except:
         font = ImageFont.load_default()
     
-    # خطوط حمراء مخيفة
     d.text((400, 200), text, fill=(180, 0, 0), font=font, anchor="mm")
-    
     img.save("logo.png")
     bot.send_photo(message.chat.id, open("logo.png", "rb"))
 
