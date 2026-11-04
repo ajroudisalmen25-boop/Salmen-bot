@@ -1,28 +1,28 @@
-import telebot
-import os
 from PIL import Image, ImageDraw, ImageFont
+import io
 
-TOKEN = os.environ.get('TELEGRAM_TOKEN')  # ✅ الصحيح
-bot = telebot.TeleBot(TOKEN)
-
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.reply_to(message, "👹 ابعتلي أي كلمة تو نعملك بيها لوقو ملعون")
-
-@bot.message_handler(func=lambda message: True)
-def make_logo(message):
-    text = message.text
-    img = Image.new('RGB', (800, 400), color=(0, 0, 0))
-    d = ImageDraw.Draw(img)
+def make_logo(text):
+    # خلفية سوداء
+    img = Image.new('RGB', (1080, 1080), color='black')
+    draw = ImageDraw.Draw(img)
     
+    # فونت ابيض كبير في الوسط
     try:
-        font = ImageFont.truetype("arial.ttf", 60)
+        font = ImageFont.truetype("arial.ttf", 120)  # جرب فونت موجود
     except:
-        font = ImageFont.load_default()
+        font = ImageFont.load_default()  # كان ما لقاش فونت
     
-    d.text((400, 200), text, fill=(180, 0, 0), font=font, anchor="mm")
-    img.save("logo.png")
-    bot.send_photo(message.chat.id, open("logo.png", "rb"))
-
-print("Bot is running...")
-bot.polling()
+    # احسب وين نحط الكتابة في الوسط
+    bbox = draw.textbbox((0, 0), text, font=font)
+    text_width = bbox[2] - bbox[0]
+    text_height = bbox[3] - bbox[1]
+    x = (1080 - text_width) / 2
+    y = (1080 - text_height) / 2
+    
+    # اكتب بالابيض مش بالاسود 👹
+    draw.text((x, y), text, fill="white", font=font)
+    
+    # ستايل ملعون
+    draw.text((x+5, y+5), text, fill="red", font=font)  # ظل احمر
+    
+    return img
