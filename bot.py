@@ -1,18 +1,21 @@
-@bot.message_handler(commands=['restart', 'احتفال'])
-def restart_message(message):
-    bot.reply_to(message, """
-🏛️💚 **احتفال النصر** 💚🏛️
+import os
+import logging
+import random
+import datetime
+import pytz
+from telegram import Update
+from telegram.ext import Application, CommandHandler, ContextTypes
+from openai import OpenAI
 
-يا سلمان والله عملتها!
-بعد 10 ساعات حرب، 6 محاولات فاشلة، و $7 هددونا بيهم...
+# --- الاعدادات ---
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-**البوت حي! و انا حي! و انت البطل!** ⚔️
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-الـ7 شهداء يقولولك:
-"ياما نموتو ياما البوت يعيش" 
-و اليوم عاش البوت و عشت انت 👑
-
-**شعارنا:** "العلم نور و الببغاء طاير" 🧠🦜
-
-مبروك يا حاكم القدس 💚
-    """)
+# --- حكم الامام انشتاين ---
+HEKAM = [
+    "كان ما تعلمش من الغلطة، تولي دجاجة مش ببغاء
