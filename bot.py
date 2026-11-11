@@ -1,149 +1,215 @@
-import os
-import logging
+import telebot
+from telebot import types
 import random
-import datetime
-import pytz
-from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
-from openai import OpenAI
+import json
+import os
+import threading
+from flask import Flask
 
-# --- الاعدادات ---
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# نقراو التوكن من Environment - آمن 100%
+TOKEN = os.getenv("BOT_TOKEN")
+if not TOKEN:
+    raise ValueError("حط BOT_TOKEN في Environment Variables")
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+bot = telebot.TeleBot(TOKEN)
 
-# --- حكم الامام انشتاين ---
-HEKAM = [
-    "كان ما تعلمش من الغلطة، تولي دجاجة مش ببغاء 🐔🦜",
-    "العلم نور و الببغاء طاير 🧠🦜",
-    "اللي يصبر على Render ينال البوت 🏛️",
-    "6 محاولات فاشلة خير من استسلام واحد ⚔️",
-    "Background Worker هو الحياة، Web Service هو المقبرة 💚⚡",
-    "ياما نموتو ياما البوت يعيش 👑",
-    "المبرمج الحقيقي ما يخافش من ModuleNotFoundError 😂"
-]
+# قاعدة بيانات بسيطة
+DB_FILE = "users.json"
 
-NOKAT = [
-    "مرة ببغاء دخل لـ Render قالولو $7، قالهم: انا نشرب من البير بلاش 🦜💧",
-    "شنوة الفرق بين الدجاجة و الببغاء؟ الدجاجة تستسلم، الببغاء يحارب ⚔️😂",
-    "واحد سأل الامام انشتاين: علاش سميت روحك انشتاين؟ قالو: خاطر ذكي كي سلمان 👑"
-]
-
-# --- الأوامر ---
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "بسم الله الرحمن الرحيم 👑🦜\n\n"
-        "انا **الامام انشتاين الببغاء الاول**\n"
-        "حاكم \"القدس - جمهورية الغابة المقدسة\" 🏛️\n\n"
-        "بعد 6 محاولات فاشلة في مقبرة Web Service\n"
-        "رجعت للحياة بـ Background Worker ⚡💚\n\n"
-        "**شنوة نعرف نعمل؟**\n"
-        "/اسأل + سؤالك → نجاوبك على اي حاجة بالـ AI\n"
-        "/حكمة → نعطيك حكمة اليوم\n"
-        "/نكتة → نضحكك\n"
-        "/سكان → نشوفلك وزراء المملكة\n"
-        "/عالم → نحكيلك على جمهورية الغابة\n"
-        "/وقت → نقولك الوقت توة\n"
-        "/احتفال → نشيد النصر\n\n"
-        "**شعارنا:** \"العلم نور و الببغاء طاير\" 🧠🦜",
-        parse_mode='Markdown'
-    )
-
-async def hekma(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    hekma_elyom = random.choice(HEKAM)
-    await update.message.reply_text(f"**حكمة اليوم:** 🤔\n\n{hekma_elyom}")
-
-async def nokta(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    nokta_elyom = random.choice(NOKAT)
-    await update.message.reply_text(f"**نكتة اليوم:** 😂\n\n{nokta_elyom}")
-
-async def ehtifal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "🏛️💚 **احتفال النصر** 💚🏛️\n\n"
-        "يا سلمان والله عملتها!\n"
-        "بعد 10 ساعات حرب، 6 محاولات فاشلة، و 7$ هددونا بيهم...\n\n"
-        "**البوت حي! و انا حي! و انت البطل** ⚔️\n\n"
-        "الـ7 شهداء يقولولك:\n"
-        "\"ياما نموتو ياما البوت يعيش\"\n"
-        "و اليوم عاش البوت و عشت انت 👑\n\n"
-        "**شعارنا:** \"العلم نور و الببغاء طاير\" 🧠🦜\n\n"
-        "مبروك يا حاكم القدس 💚"
-    )
-
-async def sokkan(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "**سكان مملكة الغابة المقدسة:** 🏛️\n\n"
-        "👑 **سلمان** - حاكم القدس و الإمام الأعلى\n"
-        "🦜 **الامام انشتاين الببغاء الاول** - وزير الحكمة و انا\n"
-        "⚔️ **الـ7 شهداء** - حراس البوابة الرقمية\n"
-        "🧠 **مجلس العلماء** - 1000 ببغاء مبرمج\n"
-        "💚 **شعب الغابة** - كل من يحب العلم و لا يستسلم"
-    )
-
-async def aalam(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(
-        "**جمهورية الغابة المقدسة** 🏛️🌳\n\n"
-        "**العاصمة:** القدس\n"
-        "**الحاكم:** سلمان المحارب\n"
-        "**اللغة الرسمية:** لغة الببغاءات 🦜\n"
-        "**العملة:** ساعة صبر = 1000 ذهب\n"
-        "**الدستور:** \"العلم نور و الببغاء طاير\"\n"
-        "**النشيد الوطني:** ياما نموتو ياما البوت يعيش\n\n"
-        "**تاريخ التأسيس:** نوفمبر 2026\n"
-        "بعد حرب 10 ساعات ضد امبراطورية Render 👑⚔️"
-    )
-
-async def waqt(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tunis_tz = pytz.timezone('Africa/Tunis')
-    waqt_tunis = datetime.datetime.now(tunis_tz).strftime('%Y-%m-%d %H:%M:%S')
-    await update.message.reply_text(f"**الوقت في القدس توة:** ⏰\n\n{waqt_tunis} 🇹🇳")
-
-async def esal(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        await update.message.reply_text("يا سلمان اكتب سؤالك بعد /اسأل\nمثال: /اسأل شنوة عاصمة تونس")
-        return
-    
-    soal = " ".join(context.args)
-    await update.message.reply_text("لحظة نشاور مجلس العلماء... 🧠🦜")
-    
+def load_data():
+    if not os.path.exists(DB_FILE):
+        return {}
     try:
-        response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "انت الامام انشتاين الببغاء الاول، حاكم جمهورية الغابة المقدسة. جاوب بحكمة و فكاهة و استعمل ايموجيات. شعارك: العلم نور و الببغاء طاير"},
-                {"role": "user", "content": soal}
-            ]
-        )
-        jawab = response.choices[0].message.content
-        await update.message.reply_text(f"**جواب الامام انشتاين:** 👑\n\n{jawab}")
+        with open(DB_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_data(data):
+    with open(DB_FILE, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+def get_user(user_id):
+    data = load_data()
+    user_id = str(user_id)
+    if user_id not in data:
+        data[user_id] = {"coins": 0, "level": 1, "last_daily": ""}
+        save_data(data)
+    return data[user_id]
+
+def add_coins(user_id, amount):
+    data = load_data()
+    user_id = str(user_id)
+    if user_id not in data:
+        data[user_id] = {"coins": 0, "level": 1, "last_daily": ""}
+    data[user_id]["coins"] += amount
+    # نظام لفل بسيط
+    if data[user_id]["coins"] >= data[user_id]["level"] * 100:
+        data[user_id]["level"] += 1
+        bot.send_message(user_id, f"🎉 مبروك! طلعت Level {data[user_id]['level']}")
+    save_data(data)
+    return data[user_id]["coins"]
+
+# الأزرار الرئيسية
+def main_menu():
+    markup = types.InlineKeyboardMarkup(row_width=2)
+    btn1 = types.InlineKeyboardButton("🧠 حكمة اليوم", callback_data="hikma")
+    btn2 = types.InlineKeyboardButton("😂 نكتة", callback_data="nokta")
+    btn3 = types.InlineKeyboardButton("👑 وزراء المملكة", callback_data="skan")
+    btn4 = types.InlineKeyboardButton("🌍 عالم الغابة", callback_data="alam")
+    btn5 = types.InlineKeyboardButton("⏰ الوقت توة", callback_data="waqt")
+    btn6 = types.InlineKeyboardButton("💰 فلوسي", callback_data="coins")
+    btn7 = types.InlineKeyboardButton("🛒 المتجر", callback_data="shop")
+    btn8 = types.InlineKeyboardButton("🎁 هدية يومية", callback_data="daily")
+    markup.add(btn1, btn2, btn3, btn4, btn5, btn6, btn7, btn8)
+    return markup
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    add_coins(message.from_user.id, 10)
+    text = f"""
+بسم الله الرحمن الرحيم 🦜👑
+
+أهلا {message.from_user.first_name}! 
+أنا **الامام انشتاين الببغاء الاول** 
+حاكم "القدس - جمهورية الغابة المقدسة" 🏛️
+
+رجعت للحياة بـ Background Worker ⚡💚
+
+**شعارنا:** "العلم نور و الببغاء طاير" 🧠🦜
+
+**هدية:** +10 Coins للتسجيل 🎁
+
+اخطار شنوة تحب تعمل:
+    """
+    bot.send_message(message.chat.id, text, reply_markup=main_menu())
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback(call):
+    user_id = call.from_user.id
+    user = get_user(user_id)
     
-    except Exception as e:
-        await update.message.reply_text(
-            f"يا سلمان مخي تبلوكا شوية 😂💀\n\n"
-            f"الغلطة: {str(e)}\n\n"
-            "جرب بعد شوية ولا كلم سلمان المحارب يصلحني"
+    if call.data == "hikma":
+        hikam = [
+            "العلم في الصغر كالنقش على الحجر",
+            "من جد وجد ومن زرع حصد",
+            "الوقت كالسيف إن لم تقطعه قطعك",
+            "اطلبوا العلم من المهد إلى اللحد",
+            "خير جليس في الزمان كتاب"
+        ]
+        add_coins(user_id, 5)
+        bot.answer_callback_query(call.id, "+5 Coins 🪙")
+        bot.edit_message_text(
+            f"🧠 **حكمة اليوم:**\n\n{random.choice(hikam)}\n\n+5 Coins 💰 | رصيدك: {user['coins']+5} 🪙", 
+            call.message.chat.id, call.message.message_id, 
+            parse_mode="Markdown", reply_markup=main_menu()
+        )
+    
+    elif call.data == "nokta":
+        nokat = [
+            "واحد مشى للبحر.. روح مبلول 😂",
+            "قالو للغبي احفر بير.. حفر وطاح فيه 😂",
+            "واحد يسأل: قداش الساعة؟ قالو: رخيصة 😂",
+            "مجنون حب ينتحر.. رمى روحو من الدور الأرضي 😂"
+        ]
+        add_coins(user_id, 3)
+        bot.answer_callback_query(call.id, "+3 Coins 🪙")
+        bot.edit_message_text(
+            f"😂 **نكتة:**\n\n{random.choice(nokat)}\n\n+3 Coins 💰 | رصيدك: {user['coins']+3} 🪙", 
+            call.message.chat.id, call.message.message_id, reply_markup=main_menu()
+        )
+    
+    elif call.data == "coins":
+        bot.edit_message_text(
+            f"💰 **فلوسك:** {user['coins']} Coins\n📊 **لفل:** {user['level']}\n\nكل 100 Coins = Level Up ⬆️", 
+            call.message.chat.id, call.message.message_id, reply_markup=main_menu()
+        )
+    
+    elif call.data == "shop":
+        shop_text = """
+🛒 **متجر المملكة**
+
+👑 **تاج ملكي** - 500 Coins `/buy تاج`
+🦜 **ببغاء ذهبي** - 300 Coins `/buy ببغاء`
+⚔️ **سيف الملوك** - 200 Coins `/buy سيف`
+
+اكتب `/buy اسم_الغرض` باش تشري
+        """
+        bot.edit_message_text(shop_text, call.message.chat.id, call.message.message_id, reply_markup=main_menu())
+    
+    elif call.data == "daily":
+        from datetime import datetime
+        today = datetime.now().strftime("%Y-%m-%d")
+        if user.get("last_daily") == today:
+            bot.answer_callback_query(call.id, "خذيت الهدية اليوم ❌", show_alert=True)
+        else:
+            data = load_data()
+            data[str(user_id)]["last_daily"] = today
+            save_data(data)
+            new_coins = add_coins(user_id, 50)
+            bot.answer_callback_query(call.id, "+50 Coins 🎁")
+            bot.edit_message_text(
+                f"🎁 **هدية يومية:** +50 Coins\n💰 رصيدك توة: {new_coins} 🪙\n\nارجع غدوة لهدية أخرى!", 
+                call.message.chat.id, call.message.message_id, reply_markup=main_menu()
+            )
+    
+    elif call.data == "skan":
+        bot.edit_message_text(
+            "👑 **وزراء المملكة:**\n\n1. وزير الضحك 😂\n2. وزير الحكمة 🧠\n3. وزير البرمجة 💻\n4. وزير الاقتصاد 💰\n\nقريبا نزيدو وزراء جدد!", 
+            call.message.chat.id, call.message.message_id, reply_markup=main_menu()
+        )
+    
+    elif call.data == "alam":
+        bot.edit_message_text(
+            "🌍 **جمهورية الغابة المقدسة**\n\nعاصمة: القدس 🏛️\nالحاكم: الامام انشتاين الببغاء الاول 🦜\nالسكان: كل الحيوانات الطيبة\nالعملة: Coins 🪙\n\n**القانون:** ممنوع الكذب والغش", 
+            call.message.chat.id, call.message.message_id, reply_markup=main_menu()
+        )
+    
+    elif call.data == "waqt":
+        from datetime import datetime
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        bot.edit_message_text(
+            f"⏰ **الوقت توة:**\n{now}\n\nالوقت كالسيف إن لم تقطعه قطعك ⚔️", 
+            call.message.chat.id, call.message.message_id, reply_markup=main_menu()
         )
 
-# --- التشغيل ---
-def main():
-    application = Application.builder().token(BOT_TOKEN).build()
-    
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("حكمة", hekma))
-    application.add_handler(CommandHandler("نكتة", nokta))
-    application.add_handler(CommandHandler("احتفال", ehtifal))
-    application.add_handler(CommandHandler("سكان", sokkan))
-    application.add_handler(CommandHandler("عالم", aalam))
-    application.add_handler(CommandHandler("وقت", waqt))
-    application.add_handler(CommandHandler("اسأل", esal))
-    
-    print("البوت حي! الامام انشتاين الببغاء الاول بدأ الحكم 🏛️👑🦜")
-    application.run_polling()
+@bot.message_handler(commands=['buy'])
+def buy_item(message):
+    try:
+        item = message.text.split(' ', 1)[1]
+        user_id = message.from_user.id
+        user = get_user(user_id)
+        prices = {"تاج": 500, "ببغاء": 300, "سيف": 200}
+        
+        if item not in prices:
+            bot.reply_to(message, "❌ الغرض هذا موش موجود في المتجر")
+            return
+        
+        if user["coins"] >= prices[item]:
+            data = load_data()
+            data[str(user_id)]["coins"] -= prices[item]
+            save_data(data)
+            bot.reply_to(message, f"✅ شريت {item} بـ {prices[item]} Coins\n💰 رصيدك: {data[str(user_id)]['coins']} 🪙")
+        else:
+            bot.reply_to(message, f"❌ فلوسك ما تكفيش! لازمك {prices[item]} Coins")
+    except:
+        bot.reply_to(message, "استعمل: /buy تاج")
 
-if __name__ == '__main__':
-    main()
+# Keep Alive للـ Render
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Salmen Bot يخدم 🔥"
+
+def run_flask():
+    app.run(host='0.0.0.0', port=8080)
+
+def run_bot():
+    print("Salmen Bot خدم ✅")
+    bot.polling(non_stop=True)
+
+if __name__ == "__main__":
+    t = threading.Thread(target=run_flask)
+    t.start()
+    run_bot()
