@@ -7,7 +7,7 @@ import threading
 from flask import Flask
 
 # نقراو التوكن من Environment - آمن 100%
-TOKEN = os.getenv("BOT_TOKEN")
+TOKEN = 8928666107:AAFdWctjlr-foi-iuLJnsw0HI0n40jH1qDg
 if not TOKEN:
     raise ValueError("حط BOT_TOKEN في Environment Variables")
 
