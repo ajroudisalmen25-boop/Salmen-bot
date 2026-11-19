@@ -1,40 +1,48 @@
 import os
 import telebot
-from flask import Flask
-import threading
+import time
+import logging
 
-# يجيب التوكن من Environment متع Render - ما تحطوش هنا
+# شغّل الـ Logs باش تشوف الأخطاء في Render
+logging.basicConfig(level=logging.INFO)
+
+# جيب التوكن من Environment Variables
 TOKEN = os.getenv("BOT_TOKEN")
 
 if not TOKEN:
     raise ValueError("BOT_TOKEN موش موجود! حطو في Environment Variables في Render")
 
 bot = telebot.TeleBot(TOKEN)
-app = Flask(__name__)
 
-# هذا باش Render ما يعطيكش Error متع Port
-@app.route('/')
-def home():
-    return "Salmen Bot خدم ✅"
-
-def run_flask():
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
-
+# أمر /start
 @bot.message_handler(commands=['start'])
-def start(message):
-    bot.reply_to(message, "أهلا سلمان، البوت يخدم 🔥")
+def send_welcome(message):
+    bot.reply_to(message, "أهلا سلمان 🔥\nالبوت يخدم 24/7 وموش باش يطيح راسك")
 
+# أمر /help
 @bot.message_handler(commands=['help'])
-def help_command(message):
-    bot.reply_to(message, "ابعث أي حاجة ونجاوبك")
+def send_help(message):
+    bot.reply_to(message, "ابعت أي حاجة ونجاوبك\n/Start - نبداو\n/Help - المساعدة")
 
+# أي رسالة أخرى
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
-    bot.reply_to(message, f"قلت: {message.text}")
+    try:
+        bot.reply_to(message, f"قلت: {message.text}")
+    except Exception as e:
+        logging.error(f"Error: {e}")
 
-if __name__ == "__main__":
-    # شغل Flask في thread وحدو
-    threading.Thread(target=run_flask).start()
-    print("Salmen Bot خدم ✅")
-    bot.infinity_polling()
+# هذا أهم سطر: يخلي البوت يخدم وما يموتش
+def main():
+    logging.info("Salmen Bot Starting...")
+    while True:
+        try:
+            logging.info("Bot is polling...")
+            bot.infinity_polling(timeout=60, long_polling_timeout=60)
+        except Exception as e:
+            logging.error(f"Bot crashed: {e}")
+            logging.info("Restarting in 15 seconds...")
+            time.sleep(15)
+
+if __name__ == '__main__':
+    main()
